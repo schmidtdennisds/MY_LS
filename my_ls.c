@@ -63,6 +63,50 @@ void print_str_Array(char str_array[][MAX_LEN], int str_count) {
     }
 }
 
+int my_str_cmp(char* strA, char* strB) {
+    if (my_str_eql(strA, strB)) {
+        return 0;
+    }
+
+    bool is_a_shorter = true;
+    int min_len = my_str_len(strA);
+    if (my_str_len(strB) < min_len) {
+        min_len = my_str_len(strB);
+        is_a_shorter = false;
+    }
+    
+    for (int i = 0; i < min_len; i++) {
+        if (strA[i] > strB[i]) {
+            return 1;
+        } else if (strA[i] < strB[i]) {
+            return -1;
+        }
+    }
+
+    if(is_a_shorter){
+        return -1;
+    } else {
+        return 1;
+    }
+}
+
+void swap(char* str1, char* str2) {
+    char temp[MAX_LEN];
+    my_str_copy(temp, str1);
+    my_str_copy(str1, str2);
+    my_str_copy(str2, temp);
+}
+
+void bubbleSort(char array[][MAX_LEN], int str_count) {
+    for (int i = 0; i < str_count - 1; i++) {
+        for (int j = 0; j < str_count - i - 1; j++) {
+            if (my_str_cmp(array[j], array[j+1]) > 0) {
+                swap(array[j], array[j + 1]);
+            }
+        }
+    }
+}
+
 int main(int ac, char** av) {
     bool flagA = false;
     bool flagT = false;
@@ -97,6 +141,7 @@ int main(int ac, char** av) {
     }
     closedir(dir);
 
+    bubbleSort(str_array, strCount);
     print_str_Array(str_array, strCount);
     
 }
