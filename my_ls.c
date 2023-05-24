@@ -107,41 +107,110 @@ void bubbleSort(char array[][MAX_LEN], int str_count) {
     }
 }
 
+void setFileAndDirCount(int* fileCount, int* dirCount, int countFlags, int ac, char** av, bool flagA) {
+    struct dirent* entry;
+    DIR* dir;
+    for (int indexOperand = countFlags+1; indexOperand < ac; indexOperand++) {
+        dir = opendir(av[indexOperand]);
+        if (dir == NULL) {
+            *fileCount = *fileCount + 1;
+            continue;
+        }
+
+        while ((entry = readdir(dir)) != NULL) {
+            char* name = entry->d_name;
+            if (!flagA && name[0] == '.') {
+                continue;
+            }
+            *dirCount = *dirCount + 1;
+        }
+        closedir(dir);
+    }
+}
+
+void setDirCountLocal(int* dirCount, bool flagA) {
+    struct dirent* entry;
+    DIR* dir = opendir(".");
+
+    while ((entry = readdir(dir)) != NULL) {
+        char* name = entry->d_name;
+        if (!flagA && name[0] == '.') {
+            continue;
+        }
+        *dirCount = *dirCount + 1;
+    }
+    closedir(dir);
+}
+
+void fillFileAndDirArrays(char files[][MAX_LEN], char dirs[][MAX_LEN], int countFlags, int ac, char** av, bool flagA) {
+    struct dirent* entry;
+    DIR* dir;
+    int fileIndex = 0;
+    int dirIndex = 0;
+    for (int indexOperand = countFlags+1; indexOperand < ac; indexOperand++) {
+        dir = opendir(av[indexOperand]);
+        if (dir == NULL) {
+            my_str_copy(files[fileIndex], av[indexOperand]);
+            fileIndex++;
+            continue;
+        }
+
+        while ((entry = readdir(dir)) != NULL) {
+            char* name = entry->d_name;
+            if (!flagA && name[0] == '.') {
+                continue;
+            }
+            my_str_copy(dirs[dirIndex], name);
+            dirIndex++;
+        }
+        closedir(dir);
+    }
+}
+
+void fillDirArrayLocal(char dirs[][MAX_LEN], bool flagA) {
+    struct dirent* entry;
+    DIR* dir = opendir(".");
+    int dirIndex = 0;
+
+    while ((entry = readdir(dir)) != NULL) {
+        char* name = entry->d_name;
+        if (!flagA && name[0] == '.') {
+            continue;
+        }
+        my_str_copy(dirs[dirIndex], name);
+        dirIndex++;
+    }
+    closedir(dir);
+}
+
 int main(int ac, char** av) {
     bool flagA = false;
     bool flagT = false;
-    struct dirent* entry;
-    DIR* dir = opendir(".");
-    int strCount = 0;
+    int fileCount = 0;
+    int dirCount = 0;
 
     setFlags(ac, av, &flagA, &flagT);
-    // printf("Flag A ist set: %d, Flag T is set: %d\n", flagA, flagT);
+    int countFlags = (int) flagA + (int) flagT;
+    //printf("Count: %d, Flag A ist set: %d, Flag T is set: %d\n",countFlags, flagA, flagT);
 
-    // Sets the count of the all the strings in the output of my_ls
-    while ((entry = readdir(dir)) != NULL) {
-        char* name = entry->d_name;
-        if (!flagA && name[0] == '.') {
-            continue;
-        }
-        strCount++;
-    }
-    closedir(dir);
-
-    char str_array[strCount][MAX_LEN];
-
-    opendir(".");
-    int index = 0;
-    while ((entry = readdir(dir)) != NULL) {
-        char* name = entry->d_name;
-        if (!flagA && name[0] == '.') {
-            continue;
-        }
-        my_str_copy(str_array[index], name);
-        index++;
-    }
-    closedir(dir);
-
-    bubbleSort(str_array, strCount);
-    print_str_Array(str_array, strCount);
+    bool hasOperands = ac > countFlags + 1;
+    if (hasOperands) {
+        setFileAndDirCount(&fileCount, &dirCount, countFlags, ac, av, flagA);
+    } else {
+        setDirCountLocal(&dirCount, flagA);
+    }    
     
+    char file_array[fileCount][MAX_LEN];
+    char dir_array[dirCount][MAX_LEN];
+
+    if (hasOperands) {
+        fillFileAndDirArrays(file_array, dir_array, countFlags, ac, av, flagA);
+    } else {
+        fillDirArrayLocal(dir_array, flagA);
+    }  
+
+    bubbleSort(file_array, fileCount);
+    bubbleSort(dir_array, dirCount);
+    print_str_Array(file_array, fileCount);
+    print_str_Array(dir_array, dirCount);
 }
