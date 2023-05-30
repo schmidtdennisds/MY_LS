@@ -52,8 +52,13 @@ void setFlags(int ac, char** av, bool* flagA, bool* flagT) {
 }
 
 void my_str_copy(char dest[MAX_LEN], char*src) {
-    for (int i = 0; i < MAX_LEN; i++) {
-        dest[i] = src[i];
+    int index = 0;
+    while (src[index]) {
+        dest[index] = src[index];
+        index++;
+    }
+    if (index < MAX_LEN - 1) {
+        dest[index] = '\0';
     }
 }
 
@@ -107,7 +112,7 @@ void bubbleSort(char array[][MAX_LEN], int str_count) {
     }
 }
 
-void setAllFilesAndDirsCount(int* fileCount, int* dirCount, int countFlags, int ac, char** av) {
+void setAllFilesAndDirsCount(int* fileCount, int* dirCount, int countFlags, int ac,  char av[][MAX_LEN]) {
     DIR* dir;
     for (int indexOperand = countFlags+1; indexOperand < ac; indexOperand++) {
         dir = opendir(av[indexOperand]);
@@ -120,7 +125,7 @@ void setAllFilesAndDirsCount(int* fileCount, int* dirCount, int countFlags, int 
     }
 }
 
-void fillFileAndDirArrays(char files[][MAX_LEN], char dirs[][MAX_LEN], int countFlags, int ac, char** av) {
+void fillFileAndDirArrays(char files[][MAX_LEN], char dirs[][MAX_LEN], int countFlags, int ac, char av[][MAX_LEN]) {
     DIR* dir;
     int fileIndex = 0;
     int dirIndex = 0;
@@ -188,10 +193,14 @@ int main(int ac, char** av) {
 
     bool hasOperands = ac > countFlags + 1;
     if (hasOperands) {
-        setAllFilesAndDirsCount(&allFilesCount, &allDirsCount, countFlags, ac, av);
+        char arguments[ac][MAX_LEN];
+        for (int i = 0; i < ac; i++) {
+            my_str_copy(arguments[i], av[i]);
+        }
+        setAllFilesAndDirsCount(&allFilesCount, &allDirsCount, countFlags, ac, arguments);
         char allFiles_array[allFilesCount][MAX_LEN];
         char allDirs_array[allDirsCount][MAX_LEN];
-        fillFileAndDirArrays(allFiles_array, allDirs_array, countFlags, ac, av);
+        fillFileAndDirArrays(allFiles_array, allDirs_array, countFlags, ac, arguments);
         bubbleSort(allFiles_array, allFilesCount);
         print_str_Array(allFiles_array, allFilesCount);
         if (allFilesCount > 0) {
