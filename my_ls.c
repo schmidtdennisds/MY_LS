@@ -28,6 +28,18 @@ int my_str_eql(char* str1, char* str2) {
     return 1;
 }
 
+char* my_str_cat(char *str1, const char *str2)
+{
+    int len = my_str_len(str1);
+    int index;
+    for (index = 0; str2[index] != '\0'; index++)
+    {
+        str1[len + index] = str2[index];
+    }
+    str1[len + index] = '\0';
+    return str1;
+}
+
 int setFlags(int ac, char** av, bool* flagA, bool* flagT) {
     if (ac == 2) {
         if (my_str_eql(av[1], "-a")) {
@@ -116,17 +128,31 @@ void swap(char* str1, char* str2) {
     my_str_copy(str2, temp);
 }
 
-void lex_or_timelex_sort(char array[][MAX_LEN], int str_count, bool flagT) {
+void lex_or_timelex_sort(char* dirStr, char array[][MAX_LEN], int str_count, bool flagT) {
     for (int i = 0; i < str_count - 1; i++) {
         for (int j = 0; j < str_count - i - 1; j++) {
             if (flagT) {
                 struct stat buffer;
-                lstat(array[j], &buffer);
+                struct stat buffer2;
+                char dirStrCopy[MAX_LEN] = "";
+                char dirStrCopy2[MAX_LEN] = "";
+                my_str_cat(dirStrCopy, dirStr);
+                my_str_cat(dirStrCopy, "/");
+                my_str_cat(dirStrCopy2, dirStr);
+                my_str_cat(dirStrCopy2, "/");
+
+                my_str_cat(dirStrCopy, array[j]);
+               // printf("copy1: %s\n", dirStrCopy);
+                lstat(dirStrCopy, &buffer);
                 __time_t sec = buffer.st_mtim.tv_sec;
                 __time_t nsec = buffer.st_mtim.tv_nsec;
-                lstat(array[j+1], &buffer);
-                __time_t sec2 = buffer.st_mtim.tv_sec;
-                __time_t nsec2 = buffer.st_mtim.tv_nsec;
+
+                my_str_cat(dirStrCopy2, array[j+1]);
+                //printf("copy2: %s\n", dirStrCopy2);
+                lstat(dirStrCopy2, &buffer2);
+                __time_t sec2 = buffer2.st_mtim.tv_sec;
+                __time_t nsec2 = buffer2.st_mtim.tv_nsec;
+                
                 if (sec2 > sec) {
                     swap(array[j], array[j + 1]);
                 } else if (sec2 == sec && nsec2 > nsec) {
@@ -210,7 +236,7 @@ void printDirEntries(char* dirStr, bool flagA, bool flagT) {
     setDirCount(&dirCount, dirStr, flagA);
     char dir_array[dirCount][MAX_LEN];
     fillDirArray(dir_array, dirStr, flagA);
-    lex_or_timelex_sort(dir_array, dirCount, flagT);
+    lex_or_timelex_sort(dirStr, dir_array, dirCount, flagT);
     print_str_Array(dir_array, dirCount);
 }
 
@@ -235,14 +261,14 @@ int main(int ac, char** av) {
         char allDirs_array[allDirsCount][MAX_LEN];
         fillFileAndDirArrays(allFiles_array, allDirs_array, countFlags, ac, arguments);
 
-        lex_or_timelex_sort(allFiles_array, allFilesCount, flagT);      
+        lex_or_timelex_sort(".", allFiles_array, allFilesCount, flagT);      
 
         print_str_Array(allFiles_array, allFilesCount);
         if (allFilesCount > 0) {
             printf("\n");
         }
 
-        lex_or_timelex_sort(allDirs_array, allDirsCount, flagT);
+        lex_or_timelex_sort(".", allDirs_array, allDirsCount, flagT);
         for (int i = 0; i < allDirsCount; i++) {
             char* dir = allDirs_array[i];
             if (allDirsCount > 1) {
