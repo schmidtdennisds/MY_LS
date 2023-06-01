@@ -2,22 +2,23 @@
 ***
 
 ## Task
-TODO - What is the problem? And where is the challenge?
+The problem is to program the functionality of the command line tool ls with the optional -a and -t
 
 ## Description
-TODO - How have you solved the problem?
+I broke it down into a helper my_string.c file and the main my_ls.c file with corresponding header files.
 
 ## Installation
-TODO - How to install your project? npm install? make? make re?
+To install the my_ls project run make
 
 ## Usage
-TODO - How does it work?
+It works with running:
 ```
-./my_project argument1 argument2
+make (and then)
+./my_ls [-at] [file ...]
 ```
 
 ### The Core Team
-
+Dennis Schmidt
 
 <span><i>Made at <a href='https://qwasar.io'>Qwasar SV -- Software Engineering School</a></i></span>
-<span><img alt='Qwasar SV -- Software Engineering School's Logo' src='https://storage.googleapis.com/qwasar-public/qwasar-logo_50x50.png' width='20px'></span>
+<span><img alt='Qwasar SV -- Software Engineering Schools Logo' src='https://storage.googleapis.com/qwasar-public/qwasar-logo_50x50.png' width='20px'></span>
