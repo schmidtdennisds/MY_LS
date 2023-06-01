@@ -1,45 +1,6 @@
-#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <dirent.h>
-#include <sys/stat.h>
+#include "my_ls.h"
 
-#define MAX_LEN 256
-
-int my_str_len(char* str) {
-    int count = 0;
-    while (str[count]) {
-        count++;
-    }
-    return count;
-}
-
-int my_str_eql(char* str1, char* str2) {
-    if (my_str_len(str1) != my_str_len(str2)) {
-        return 0;
-    }
-    int index = 0;
-    while (str1[index]) {
-        if (str1[index] != str2[index]) {
-            return 0;
-        }
-        index++;
-    }
-    return 1;
-}
-
-char* my_str_cat(char *str1, const char *str2)
-{
-    int len = my_str_len(str1);
-    int index;
-    for (index = 0; str2[index] != '\0'; index++)
-    {
-        str1[len + index] = str2[index];
-    }
-    str1[len + index] = '\0';
-    return str1;
-}
-
+// sets the flags and returns the count of flags as arguments given to the program
 int setFlags(int ac, char** av, bool* flagA, bool* flagT) {
     if (ac == 2) {
         if (my_str_eql(av[1], "-a")) {
@@ -74,53 +35,6 @@ int setFlags(int ac, char** av, bool* flagA, bool* flagT) {
     return (int) *flagA + (int) *flagT;
 }
 
-void my_str_copy(char dest[MAX_LEN], char*src) {
-    int index = 0;
-    while (src[index]) {
-        dest[index] = src[index];
-        index++;
-    }
-    if (index < MAX_LEN - 1) {
-        dest[index] = '\0';
-    }
-}
-
-void print_str_Array(char str_array[][MAX_LEN], int str_count) {
-    //struct stat buffer;
-    for (int i = 0; i < str_count; i++) {
-         //lstat(str_array[i], &buffer);
-         //printf("%s, sec: %ld, nsec: %ld\n", str_array[i], buffer.st_mtim.tv_sec, buffer.st_mtim.tv_nsec);
-         printf("%s\n", str_array[i]);
-    }
-}
-
-int my_str_cmp(char* strA, char* strB) {
-    if (my_str_eql(strA, strB)) {
-        return 0;
-    }
-
-    bool is_a_shorter = true;
-    int min_len = my_str_len(strA);
-    if (my_str_len(strB) < min_len) {
-        min_len = my_str_len(strB);
-        is_a_shorter = false;
-    }
-    
-    for (int i = 0; i < min_len; i++) {
-        if (strA[i] > strB[i]) {
-            return 1;
-        } else if (strA[i] < strB[i]) {
-            return -1;
-        }
-    }
-
-    if(is_a_shorter){
-        return -1;
-    } else {
-        return 1;
-    }
-}
-
 void swap(char* str1, char* str2) {
     char temp[MAX_LEN];
     my_str_copy(temp, str1);
@@ -128,40 +42,45 @@ void swap(char* str1, char* str2) {
     my_str_copy(str2, temp);
 }
 
+void timelex_sort(char* dirStr, char* first, char* second) {
+
+    // Building the path to the first and seconf file
+    struct stat buffer;
+    struct stat buffer2;
+    char dirStrCopy[MAX_LEN] = "";
+    char dirStrCopy2[MAX_LEN] = "";
+    my_str_cat(dirStrCopy, dirStr);
+    my_str_cat(dirStrCopy, "/");
+    my_str_cat(dirStrCopy2, dirStr);
+    my_str_cat(dirStrCopy2, "/");
+
+    // Getting the seconds and the nano seconds of the files
+    my_str_cat(dirStrCopy, first);
+    lstat(dirStrCopy, &buffer);
+    __time_t sec = buffer.st_mtim.tv_sec;
+    __time_t nsec = buffer.st_mtim.tv_nsec;
+
+    my_str_cat(dirStrCopy2, second);
+    lstat(dirStrCopy2, &buffer2);
+    __time_t sec2 = buffer2.st_mtim.tv_sec;
+    __time_t nsec2 = buffer2.st_mtim.tv_nsec;
+    
+    if (sec2 > sec) {
+        swap(first, second);
+    } else if (sec2 == sec && nsec2 > nsec) {
+        swap(first, second);
+    } else if (sec2 == sec && nsec2 == nsec) {
+        if (my_str_cmp(first, second) > 0) {
+            swap(first, second);
+        }   
+    }
+}
+
 void lex_or_timelex_sort(char* dirStr, char array[][MAX_LEN], int str_count, bool flagT) {
     for (int i = 0; i < str_count - 1; i++) {
         for (int j = 0; j < str_count - i - 1; j++) {
             if (flagT) {
-                struct stat buffer;
-                struct stat buffer2;
-                char dirStrCopy[MAX_LEN] = "";
-                char dirStrCopy2[MAX_LEN] = "";
-                my_str_cat(dirStrCopy, dirStr);
-                my_str_cat(dirStrCopy, "/");
-                my_str_cat(dirStrCopy2, dirStr);
-                my_str_cat(dirStrCopy2, "/");
-
-                my_str_cat(dirStrCopy, array[j]);
-               // printf("copy1: %s\n", dirStrCopy);
-                lstat(dirStrCopy, &buffer);
-                __time_t sec = buffer.st_mtim.tv_sec;
-                __time_t nsec = buffer.st_mtim.tv_nsec;
-
-                my_str_cat(dirStrCopy2, array[j+1]);
-                //printf("copy2: %s\n", dirStrCopy2);
-                lstat(dirStrCopy2, &buffer2);
-                __time_t sec2 = buffer2.st_mtim.tv_sec;
-                __time_t nsec2 = buffer2.st_mtim.tv_nsec;
-                
-                if (sec2 > sec) {
-                    swap(array[j], array[j + 1]);
-                } else if (sec2 == sec && nsec2 > nsec) {
-                    swap(array[j], array[j + 1]);
-                } else if (sec2 == sec && nsec2 == nsec) {
-                    if (my_str_cmp(array[j], array[j+1]) > 0) {
-                        swap(array[j], array[j + 1]);
-                    }   
-                }
+               timelex_sort(dirStr, array[j], array[j+1]);
             } else {
                 if (my_str_cmp(array[j], array[j+1]) > 0) {
                     swap(array[j], array[j + 1]);
@@ -237,7 +156,7 @@ void printDirEntries(char* dirStr, bool flagA, bool flagT) {
     char dir_array[dirCount][MAX_LEN];
     fillDirArray(dir_array, dirStr, flagA);
     lex_or_timelex_sort(dirStr, dir_array, dirCount, flagT);
-    print_str_Array(dir_array, dirCount);
+    print_str_array(dir_array, dirCount);
 }
 
 int main(int ac, char** av) {
@@ -263,7 +182,7 @@ int main(int ac, char** av) {
 
         lex_or_timelex_sort(".", allFiles_array, allFilesCount, flagT);      
 
-        print_str_Array(allFiles_array, allFilesCount);
+        print_str_array(allFiles_array, allFilesCount);
         if (allFilesCount > 0) {
             printf("\n");
         }
